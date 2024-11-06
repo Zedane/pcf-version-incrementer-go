@@ -7,6 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var verbose bool
+
+func init() {
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
+}
+
 var rootCmd = &cobra.Command{
 	Use: "pcfv",
 }
