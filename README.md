@@ -55,4 +55,4 @@ For some reason the componentes I've beed working on didn't update when importin
 
 ## License
 
-See [MIT License](LICENSE.md)
+See [MIT License](LICENSE)
