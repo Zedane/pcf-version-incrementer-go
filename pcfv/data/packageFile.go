@@ -2,30 +2,46 @@ package data
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
 var PACKAGE_FILE string = "package.json"
 
 type Package struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	FilePath *string
+	Version  string
+	Row      int
+	Cache    map[string]interface{}
 }
 
-func ReadPackage() (*Package, error) {
-	fileContent, err := ReadFile(PACKAGE_FILE)
+func ReadPackage(cache bool) (*Package, error) {
+	fileContent, path, err := ReadFile(PACKAGE_FILE)
 	if err != nil {
 		return nil, err
 	}
 
-	var p Package
+	p := &Package{
+		FilePath: path,
+	}
 
-	err = json.Unmarshal(*fileContent, &p)
-	if err != nil {
+	var rawContent interface{}
+	if err := json.Unmarshal(*fileContent, &rawContent); err != nil {
 		return nil, err
 	}
 
-	return &p, nil
+	jsonVerison, ok := rawContent.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("wrong package format")
+	}
+
+	if cache {
+		p.Cache = rawContent.(map[string]interface{})
+	}
+
+	p.Version = jsonVerison["version"].(string)
+
+	return p, nil
 }
 
 func (p *Package) Print(verbose bool) {
@@ -34,7 +50,19 @@ func (p *Package) Print(verbose bool) {
 		return
 	}
 
-	fmt.Printf("Name: %s\n", p.Name)
 	fmt.Printf("File: %s\n", PACKAGE_FILE)
 	fmt.Printf("Version: %s\n", p.Version)
+	fmt.Printf("Path: %s\n", *p.FilePath)
+}
+
+func (p *Package) Update(v *Version) error {
+
+	p.Cache["version"] = v.String()
+
+	bytes, err := json.MarshalIndent(p.Cache, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	return WriteFile(p.FilePath, &bytes)
 }

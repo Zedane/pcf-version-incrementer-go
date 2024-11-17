@@ -34,23 +34,27 @@ func GetFilePath(name string) (*string, error) {
 	return &filePath, nil
 }
 
-func ReadFile(name string) (*[]byte, error) {
+func ReadFile(name string) (*[]byte, *string, error) {
 	filePath, err := GetFilePath(name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	file, err := os.Open(*filePath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	defer file.Close()
 
 	fileContent, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &fileContent, nil
+	return &fileContent, filePath, nil
+}
+
+func WriteFile(path *string, contents *[]byte) error {
+	return os.WriteFile(*path, *contents, fs.FileMode(os.O_WRONLY))
 }
