@@ -8,22 +8,29 @@ import (
 )
 
 func init() {
-	incrementCmd.Flags().BoolVarP(&major, "major", "m", false, "Increment the major version by one")
-	incrementCmd.Flags().BoolVarP(&patch, "patch", "p", false, "Increment the patch version by one")
-	rootCmd.AddCommand(incrementCmd)
+	setCmd.Flags().Int16Var(&majorV, "major", -1, "Set the major version")
+	setCmd.Flags().Int16Var(&minorV, "minor", -1, "Set the minor version")
+	setCmd.Flags().Int16Var(&patchV, "patch", -1, "Set the patch version")
+
+	rootCmd.AddCommand(setCmd)
 }
 
-var major bool
-var patch bool
+var majorV int16
+var minorV int16
+var patchV int16
 
-var incrementCmd = &cobra.Command{
-	Use:     "increment",
-	Short:   "Increment the version by one",
-	Aliases: []string{"i"},
-	Run:     RunIncrementCmd,
+var setCmd = &cobra.Command{
+	Use:   "set",
+	Short: "Set a specific vesion",
+	Run:   RunSetCmd,
 }
 
-func RunIncrementCmd(cmd *cobra.Command, args []string) {
+func RunSetCmd(cmd *cobra.Command, args []string) {
+	if majorV < 0 && minorV < 0 && patchV < 0 {
+		fmt.Println("Please input valid version")
+		return
+	}
+
 	manifest, err := data.ReadManifest(true)
 	if err != nil {
 		fmt.Println("Could not find manifest file.")
@@ -40,12 +47,16 @@ func RunIncrementCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if major {
-		version.IncrementMajor()
-	} else if patch {
-		version.IncrementPatch()
-	} else {
-		version.IncrementMinor()
+	if majorV > -1 {
+		version.Major = int(majorV)
+	}
+
+	if minorV > -1 {
+		version.Minor = int(minorV)
+	}
+
+	if patchV > -1 {
+		version.Patch = int(patchV)
 	}
 
 	fmt.Printf("%s -> %s\n", manifest.Version, version)
